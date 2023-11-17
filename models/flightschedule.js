@@ -10,6 +10,7 @@ const availableAirports = [
 
 module.exports = (sequelize, DataTypes) => {
   class FlightSchedule extends Model {
+    static tableName = 'FlightSchedules';
     static associate(models) {
       this.Airplane = this.belongsTo(models.Airplane);
       this.BoardingTickets = this.hasMany(models.BoardingTicket);

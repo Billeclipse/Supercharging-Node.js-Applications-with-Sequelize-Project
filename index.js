@@ -1,7 +1,34 @@
+const AdminJS = require("adminjs");
+const AdminJSExpress = require("@adminjs/express");
+const AdminJSSequelize = require("@adminjs/sequelize");
 const express = require("express");
 const bodyParser = require("body-parser");
 const app = express();
 const models = require("./models");
+const { server } = require("./graphql");
+AdminJS.registerAdapter(AdminJSSequelize);
+const adminJs = new AdminJS({
+    databases: [models.sequelize],
+    resources: [
+        models.Airplane,
+        {
+          resource: models.BoardingTicket,
+          options: {
+            properties: {
+              isEmployee: {
+                isVisible: false,
+              }
+            }
+          }
+        },
+        models.Customer,
+        models.FlightSchedule,
+        models.Receipts,
+    ],
+    rootPath: '/admin',
+});  
+const router = AdminJSExpress.buildRouter(adminJs);
+
 const { bookTicket } = require("./routes/tickets")
 const { createAirplane, createSchedule } = require("./routes/flights");
 
@@ -15,6 +42,12 @@ models.sequelize.sync({
 });
 
 app.use(bodyParser.json({ type: 'application/json' }));
+app.use(adminJs.options.rootPath, router);
+//app.use('/graphql', server);
+
+server.listen(3001, () => {
+  console.info('Server is running on http://localhost:3001/graphql')
+})
 
 app.get('/', function (req, res) {
     res.send("Welcome to Avalon Airlines!");

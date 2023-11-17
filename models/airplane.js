@@ -1,8 +1,10 @@
 'use strict';
 const { Model } = require('sequelize');
+const slugPlugin = require('../plugins/slug');
 
 module.exports = (sequelize, DataTypes) => {
   class Airplane extends Model {
+    static tableName = 'Airplanes';
     static associate(models) {
       this.FlightSchedules = this.hasMany(models.FlightSchedule);
     }
@@ -25,10 +27,18 @@ module.exports = (sequelize, DataTypes) => {
           msg: 'A plane must have at least one seat'
         }
       }
+    },
+    slug: {
+      type: DataTypes.STRING,
+      unique: true,
     }
   }, {
     sequelize,
     modelName: 'Airplane',
+  });
+
+  slugPlugin.use(Airplane, {
+    source: ['planeModel']
   });
 
   return Airplane;

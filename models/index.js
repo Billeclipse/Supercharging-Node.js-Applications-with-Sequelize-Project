@@ -1,12 +1,33 @@
 'use strict';
-
+const { NodeTracerProvider } = require('@opentelemetry/sdk-trace-node');
+const { registerInstrumentations } = require('@opentelemetry/instrumentation');
+const { SequelizeInstrumentation } = require('opentelemetry-instrumentation-sequelize');
 const fs = require('fs');
 const path = require('path');
 const Sequelize = require('sequelize');
 const basename = path.basename(__filename);
 const env = process.env.NODE_ENV || 'development';
 const config = require(__dirname + '/../config/config.json')[env];
+const logger = require('pino')();
 const db = {};
+config.logging = (msg) => logger.info(msg);
+const tracerProvider = new NodeTracerProvider({
+  plugins: {
+    sequelize: {
+      // disabling the default/old plugin is required
+      enabled: false,
+      path: 'opentelemetry-plugin-sequelize'
+    }
+  }
+});
+registerInstrumentations({
+  tracerProvider,
+  instrumentations: [
+    new SequelizeInstrumentation({
+      // any custom instrument options here
+    })
+  ]
+});
 
 let sequelize;
 if (config.use_env_variable) {

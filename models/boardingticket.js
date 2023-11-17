@@ -3,6 +3,7 @@ const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
   class BoardingTicket extends Model {
+    static tableName = 'BoardingTickets';
     static associate(models) {
       this.Customer = this.belongsTo(models.Customer);      
     }
