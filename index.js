@@ -1,6 +1,10 @@
 const express = require("express");
+const bodyParser = require("body-parser");
 const app = express();
 const models = require("./models");
+const { bookTicket } = require("./routes/tickets")
+const { createAirplane, createSchedule } = require("./routes/flights");
+
 models.sequelize.sync({
     force: false,
     logging: false
@@ -9,6 +13,8 @@ models.sequelize.sync({
     }).catch(function (err) {
     console.log(" > there was an issue synchronizing the database", err);
 });
+
+app.use(bodyParser.json({ type: 'application/json' }));
 
 app.get('/', function (req, res) {
     res.send("Welcome to Avalon Airlines!");
@@ -20,6 +26,8 @@ app.get('/airplanes', async function (req, res) {
                 4) + "</pre>");
 });
 
+app.post('/airplanes', createAirplane);
+
 app.get('/airplanes/:id', async function (req, res) {
     var airplane = await models.Airplane.findByPk
                    (req.params.id);
@@ -29,6 +37,9 @@ app.get('/airplanes/:id', async function (req, res) {
     res.send("<pre>" + JSON.stringify(airplane, undefined, 
               4) + "</pre>");
 });
+
+app.post('/schedules', createSchedule);
+app.post('/book-flight', bookTicket);
 
 app.listen(3000, function () {
     console.log("> express server has started");

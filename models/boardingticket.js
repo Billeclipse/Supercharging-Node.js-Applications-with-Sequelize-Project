@@ -4,8 +4,7 @@ const { Model } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
   class BoardingTicket extends Model {
     static associate(models) {
-      this.Customer = this.belongsTo(models.Customer);
-      
+      this.Customer = this.belongsTo(models.Customer);      
     }
   };
 
@@ -18,15 +17,11 @@ module.exports = (sequelize, DataTypes) => {
         }
       }
     },
-    cost: {
-      type: DataTypes.DECIMAL(7, 2)
-    },
     isEmployee: {
       type: DataTypes.VIRTUAL,
       async get() {
         const customer = await this.getCustomer();
         if (!customer || !customer.email) return false;
-
         return customer.email.endsWith('avalonairlines.com');
       }
     }
@@ -51,18 +46,20 @@ module.exports = (sequelize, DataTypes) => {
 
   // Ensure that the seat the customer has requested is available
   BoardingTicket.beforeSave('checkSeat', async (ticket, options) => {
-    const newSeat = ticket.getDataValue('seat');
-
-    if (ticket.changed('seat')) {
-      const boardingTicketExists = await BoardingTicket.findOne({
-        where: { seat: newSeat }
-      });
-
-      if (boardingTicketExists !== null) {
-        throw new Error(`The seat ${newSeat} has already been taken.`)
-      }
-    }
-  });
+    const newSeat = ticket.getDataValue('seat');
+    const { transaction } = options;
+    if (ticket.changed('seat')) {
+      const boardingTicketExists = await BoardingTicket.findOne({
+        where: {
+          seat: newSeat
+        },
+        transaction,
+      });
+      if (boardingTicketExists !== null) {
+        throw new Error(`The seat ${newSeat} has already been taken.`);
+      }
+    }
+  });
 
   return BoardingTicket;
 };

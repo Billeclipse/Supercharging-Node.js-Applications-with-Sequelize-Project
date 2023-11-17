@@ -1,5 +1,6 @@
 'use strict';
 const { Model, ValidationError } = require('sequelize');
+const { DateTime } = require('luxon');
 
 const availableAirports = [
   'MIA',
@@ -53,8 +54,17 @@ module.exports = (sequelize, DataTypes) => {
 
         if (hasAirportValues && invalidDestination) {
           throw new Error("The destination airport cannot be the same as the origin");
-        }
-      }
+        }       
+      },
+      validateDepartureTime() {
+        const dt = DateTime.fromJSDate(this.departureTime);
+        if (!dt.isValid) {
+          throw new Error("Invalid departure time");
+        }
+        if (dt < DateTime.now()) {
+          throw new Error("The departure time must be set within the future");
+        }
+      },
     }
   });
 
