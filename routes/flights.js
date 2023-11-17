@@ -2,19 +2,13 @@ const { DateTime } = require("luxon");
 const { sequelize } = require("../models");
 const models = require("../models");
 
-async function createAirplane(req, res) {
-    const { name, seats } = req.body;
-    try {
-        const airplane = await models.Airplane.create({
-            planeModel: name,
-            totalSeats: seats,
-        });
-        return res.json(airplane);
-    } catch (error) {
-        res.status(500).send(error);
-    }
+async function flightSchedules(req, res) {
+    const records = await models.FlightSchedule.findAll({
+       include: [models.Airplane]
+    });
+    res.json(records);
 }
-exports.createAirplane = createAirplane;
+exports.flightSchedules = flightSchedules;
 
 async function createSchedule(req, res) {
     const { airplaneId, origin, destination, departure } = req.body;

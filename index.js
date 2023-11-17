@@ -1,3 +1,5 @@
+const basicAuth = require("express-basic-auth");
+const path = require("path");
 const AdminJS = require("adminjs");
 const AdminJSExpress = require("@adminjs/express");
 const AdminJSSequelize = require("@adminjs/sequelize");
@@ -28,10 +30,6 @@ const adminJs = new AdminJS({
     rootPath: '/admin',
 });  
 const router = AdminJSExpress.buildRouter(adminJs);
-
-const { bookTicket } = require("./routes/tickets")
-const { createAirplane, createSchedule } = require("./routes/flights");
-
 models.sequelize.sync({
     force: false,
     logging: false
@@ -42,35 +40,21 @@ models.sequelize.sync({
 });
 
 app.use(bodyParser.json({ type: 'application/json' }));
-app.use(adminJs.options.rootPath, router);
+app.use(adminJs.options.rootPath, basicAuth({users: { 'admin': 'supersecret' }, challenge: true,}), router);
 //app.use('/graphql', server);
-
 server.listen(3001, () => {
   console.info('Server is running on http://localhost:3001/graphql')
-})
-
-app.get('/', function (req, res) {
-    res.send("Welcome to Avalon Airlines!");
 });
+app.use(express.static(path.join(__dirname, "public")));
 
-app.get('/airplanes', async function (req, res) {
-      const airplanes = await models.Airplane.findAll();
-      res.send("<pre>" + JSON.stringify(airplanes, undefined, 
-                4) + "</pre>");
-});
+const { bookTicket } = require("./routes/tickets");
+const { createSchedule, flightSchedules } = require("./routes/flights");
+const { getAirplane, getAirplanes, createAirplane } = require("./routes/airplanes");
 
+app.get('/airplanes', getAirplanes);
 app.post('/airplanes', createAirplane);
-
-app.get('/airplanes/:id', async function (req, res) {
-    var airplane = await models.Airplane.findByPk
-                   (req.params.id);
-    if (!airplane) {
-        return res.sendStatus(404);
-    }
-    res.send("<pre>" + JSON.stringify(airplane, undefined, 
-              4) + "</pre>");
-});
-
+app.get('/airplanes/:id', getAirplane);
+app.get('/flights', flightSchedules);
 app.post('/schedules', createSchedule);
 app.post('/book-flight', bookTicket);
 
